@@ -11,6 +11,7 @@ def pedir_texto(prompt: str, obligatorio: bool = True) -> str:
             return valor
         print("  Este dato es obligatorio, intenta de nuevo.")
 
+
 def pedir_float_rango(prompt: str, minimo: float, maximo: float) -> float:
     while True:
         crudo = input(prompt).strip()
@@ -23,6 +24,7 @@ def pedir_float_rango(prompt: str, minimo: float, maximo: float) -> float:
             return valor
         print(f"  Debe estar entre {minimo} y {maximo}.")
 
+
 def pedir_fecha(prompt: str) -> date:
     formatos_aceptados = ["%d/%m/%Y", "%d-%m-%Y", "%Y-%m-%d", "%Y/%m/%d"]
     while True:
@@ -34,6 +36,7 @@ def pedir_fecha(prompt: str) -> date:
                 continue
         print(f"  '{crudo}' no es una fecha válida. Usa el formato DD/MM/AAAA (ej. 27/09/2026).")
 
+
 def pedir_si_no(prompt: str) -> bool:
     while True:
         crudo = input(prompt + " (s/n): ").strip().lower()
@@ -42,6 +45,7 @@ def pedir_si_no(prompt: str) -> bool:
         if crudo in ("n", "no"):
             return False
         print("  Responde 's' o 'n'.")
+
 
 def pedir_opcion_enum(prompt: str, enum_cls: Type[E]) -> E:
     opciones = list(enum_cls)

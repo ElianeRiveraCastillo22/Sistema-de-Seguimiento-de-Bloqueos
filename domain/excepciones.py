@@ -25,3 +25,8 @@ class ConsultorNoEncontradoError(ErrorSistema):
 class BloqueoNoEncontradoError(ErrorSistema):
     """No existe ningún bloqueo con el código o índice indicado."""
     pass
+
+
+class CanalNoSoportadoError(ErrorSistema):
+    """El canal de notificación solicitado no existe en la fábrica."""
+    pass

@@ -1,5 +1,6 @@
 from datetime import date
 
+
 class Proyecto:
     def __init__(self, codigo: str, cliente: str, fecha_inicio: date, fecha_fin: date,
                  porcentaje_asignacion: float):

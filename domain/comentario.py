@@ -1,5 +1,6 @@
 from datetime import datetime
 
+
 class Comentario:
     def __init__(self, autor: str, texto: str):
         self.__fecha = datetime.now()

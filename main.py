@@ -3,7 +3,8 @@ from datetime import date
 from domain.lider_tecnico import LiderTecnico
 from domain.proyecto import Proyecto
 from servicios.gestor_bloqueo import GestorBloqueo
-from servicios.notificador import Notificador
+from servicios.canales import FabricaCanales
+from servicios.observadores import NotificadorLider, RegistroAuditoria
 from presentation.menu_consultor import menu_consultor
 from presentation.menu_lider import menu_lider
 from presentation.entrada import pedir_texto
@@ -27,7 +28,10 @@ def datos_de_arranque(lider_tecnico: LiderTecnico) -> None:
 def main():
     lider_tecnico = LiderTecnico("admin", "Jazmín")
     gestor = GestorBloqueo()
-    notificador = Notificador()
+    # Observer + Factory: el gestor avisa a sus observadores; el canal lo crea la fábrica
+    notificador = NotificadorLider(FabricaCanales.crear("consola"))
+    gestor.suscribir(notificador)
+    gestor.suscribir(RegistroAuditoria())
 
     datos_de_arranque(lider_tecnico)
 

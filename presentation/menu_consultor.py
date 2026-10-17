@@ -1,5 +1,5 @@
 from domain.excepciones import CredencialInvalidaError
-from domain.enums import TipoBloqueo
+from domain.enums import TipoBloqueo, EstadoBloqueo
 from presentation.entrada import pedir_texto, pedir_si_no, pedir_opcion_enum
 
 
@@ -52,14 +52,8 @@ def _registrar_bloqueo(consultor, gestor, notificador):
     comunicado_cliente = pedir_si_no("¿Ya comunicaste esto al líder de la consultora (cliente)?")
 
     bloqueo = consultor.registrar_bloqueo(tarea, tipo, depende_de, comunicado_cliente)
-    gestor.agregar(bloqueo)
-
     print(f"\n✅ Bloqueo registrado con código {bloqueo.obtener_codigo()}")
-    notificador.enviar(
-        "Líder Técnico",
-        f"Nuevo bloqueo de {consultor.obtener_nombre()}: {bloqueo.obtener_tarea()} "
-        f"({bloqueo.obtener_tipo_bloqueo().value})",
-    )
+    gestor.agregar(bloqueo)  # el gestor avisa a los observadores (patrón Observer)
 
 
 def _ver_mis_bloqueos(consultor, gestor):
@@ -88,6 +82,5 @@ def _ver_mis_bloqueos(consultor, gestor):
         seleccionado.agregar_comentario(consultor.obtener_nombre(), comentario)
 
     if pedir_si_no("¿Ya se resolvió este bloqueo?"):
-        from domain.enums import EstadoBloqueo
-        seleccionado.cambiar_estado(EstadoBloqueo.CERRADO)
+        gestor.cambiar_estado(seleccionado, EstadoBloqueo.CERRADO)
         print("  Bloqueo marcado como cerrado.")

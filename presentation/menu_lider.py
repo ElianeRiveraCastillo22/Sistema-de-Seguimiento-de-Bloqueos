@@ -3,12 +3,16 @@ import uuid
 from domain.excepciones import ConsultorNoEncontradoError, BloqueoNoEncontradoError
 from domain.proyecto import Proyecto
 from domain.enums import TipoBloqueo, EstadoBloqueo
+from domain.excepciones import CanalNoSoportadoError
+from servicios.canales import FabricaCanales
+from servicios.estrategias import ESTRATEGIAS_DISPONIBLES
 from presentation.entrada import (
     pedir_texto, pedir_float_rango, pedir_fecha, pedir_si_no, pedir_opcion_enum,
 )
 
 
 def menu_lider(lider_tecnico, gestor, notificador):
+    # notificador: observador NotificadorLider (permite cambiar de canal)
     print(f"\n--- Ingreso como Líder Técnico ({lider_tecnico.obtener_nombre()}) ---")
 
     while True:
@@ -19,6 +23,7 @@ def menu_lider(lider_tecnico, gestor, notificador):
         print("4. Listar bloqueos (por consultor o estado)")
         print("5. Revisar bloqueos abiertos")
         print("6. Marcar seguimiento realizado hoy")
+        print("7. Configurar canal de notificación")
         print("0. Cambiar de rol")
         opcion = pedir_texto("Elige una opción: ")
 
@@ -34,6 +39,8 @@ def menu_lider(lider_tecnico, gestor, notificador):
             _revisar_abiertos(lider_tecnico, gestor)
         elif opcion == "6":
             _marcar_seguimiento(lider_tecnico, gestor)
+        elif opcion == "7":
+            _configurar_canal(notificador)
         elif opcion == "0":
             return
         else:
@@ -111,13 +118,37 @@ def _listar_bloqueos(lider_tecnico, gestor):
         print(f"  {b} — consultor: {b.obtener_consultor().obtener_nombre()}")
 
 
+def _elegir_estrategia():
+    print("\nOrden de revisión:")
+    for i, clase in enumerate(ESTRATEGIAS_DISPONIBLES, start=1):
+        print(f"  {i}. {clase().obtener_nombre()}")
+    while True:
+        eleccion = pedir_texto("Elige el orden: ")
+        if eleccion.isdigit() and 1 <= int(eleccion) <= len(ESTRATEGIAS_DISPONIBLES):
+            return ESTRATEGIAS_DISPONIBLES[int(eleccion) - 1]()
+        print("  Opción inválida.")
+
+
+def _configurar_canal(notificador):
+    print(f"\nCanal actual: {notificador.obtener_canal().obtener_nombre()}")
+    print("Canales disponibles: " + ", ".join(FabricaCanales.canales_disponibles()))
+    nombre = pedir_texto("Nuevo canal: ")
+    try:
+        notificador.cambiar_canal(FabricaCanales.crear(nombre))
+    except CanalNoSoportadoError as e:
+        print(f"\n❌ {e.obtener_mensaje()}")
+        return
+    print(f"✅ Canal cambiado a {nombre.strip().lower()}")
+
+
 def _revisar_abiertos(lider_tecnico, gestor):
-    abiertos = lider_tecnico.revisar_bloqueos_abiertos(gestor)
+    estrategia = _elegir_estrategia()
+    abiertos = lider_tecnico.revisar_bloqueos_abiertos(gestor, estrategia)
     if not abiertos:
         print("\nNo hay bloqueos abiertos por revisar.")
         return
 
-    print("\n-- Sesión de revisión de bloqueos abiertos --")
+    print(f"\n-- Sesión de revisión de bloqueos abiertos ({estrategia.obtener_nombre()}) --")
     for b in abiertos:
         print(f"\n{b} — consultor: {b.obtener_consultor().obtener_nombre()}")
         comentario = pedir_texto("Comentario de avance (Enter para omitir): ", obligatorio=False)
@@ -125,7 +156,7 @@ def _revisar_abiertos(lider_tecnico, gestor):
             b.agregar_comentario(lider_tecnico.obtener_nombre(), comentario)
         if pedir_si_no("¿Cambiar el estado de este bloqueo?"):
             nuevo_estado = pedir_opcion_enum("Nuevo estado:", EstadoBloqueo)
-            b.cambiar_estado(nuevo_estado)
+            gestor.cambiar_estado(b, nuevo_estado)
 
 
 def _marcar_seguimiento(lider_tecnico, gestor):

@@ -1,13 +1,10 @@
 # Sistema de Seguimiento de Bloqueos
 
-Trabajo final IS275 — Fundamentos de Programación 2 (UPC). Ver `PROPUESTA.md` para el
-planteamiento del problema, `HISTORIAS_USUARIO.md` para el backlog (9 historias, con
-criterios de aceptación) y `diagrama_clases.modelio` para el modelo UML.
-
+Trabajo final IS275 — Fundamentos de Programación 2 (UPC).
 ## Ejecutar
 
 ```
-python main.py
+python3 main.py
 ```
 
 No requiere dependencias externas (solo librería estándar de Python).
@@ -25,24 +22,41 @@ inmediato sin registrar nada a mano:
 ```
 domain/         Entidades: Usuario, Consultor, LiderTecnico, Proyecto, Bloqueo,
                 Comentario, enums (TipoBloqueo, EstadoBloqueo) y excepciones propias
-servicios/      GestorBloqueo (centraliza la colección) y Notificador (simulado)
+servicios/      GestorBloqueo (Subject del Observer), canales.py (Factory),
+                observadores.py (Observer), estrategias.py (Strategy)
+tests/          Pruebas unitarias de los métodos de negocio (unittest)
 presentation/   El CLI: selección de rol, menú de Consultor y menú de Líder Técnico
 main.py         Arranca todo y crea los datos de prueba
 ```
 
-No se usan interfaces ni patrones de diseño en este código — esa parte queda para el
-TB2. La separación en capas ya deja el terreno listo para agregarlos después sin
-reescribir el dominio.
+## Patrones de diseño (TB2)
+
+| Patrón | Dónde | Para qué |
+|---|---|---|
+| Observer | `servicios/observadores.py` + `GestorBloqueo.suscribir()` | Avisar al líder técnico cuando se registra o se cierra un bloqueo, sin que el menú sepa quién escucha |
+| Strategy | `servicios/estrategias.py` | Cambiar el orden de la revisión (antigüedad, estado, sin comunicar al cliente) |
+| Factory Method | `servicios/canales.py` (`FabricaCanales`) | Crear el canal de notificación (consola, Teams simulado, memoria) por nombre |
+
+Las interfaces son clases abstractas (`abc.ABC`): `ObservadorBloqueo`, `EstrategiaOrden`
+y `CanalNotificacion`.
+
+## Pruebas
+
+```
+python3 -m unittest discover -s tests -t . -v
+```
 
 ## Historias de usuario cubiertas
 
 - **Consultor**: HU-01 (registrar bloqueo), HU-02 (ver mis bloqueos, con días
   bloqueado calculados automáticamente y comentarios)
 - **Líder técnico**: HU-03 (registrar consultor) a HU-08 (marcar seguimiento hoy)
-- **Transversal**: HU-09 (selección de rol al iniciar)
+- **Transversal**: HU-09 (selección de rol al iniciar), HU-10 (notificar al líder
+  automáticamente), HU-11 (ordenar la revisión), HU-12 (configurar canal)
 
 ## Excepciones controladas
 
-`CredencialInvalidaError`, `ConsultorNoEncontradoError`, `BloqueoNoEncontradoError` —
+`CredencialInvalidaError`, `ConsultorNoEncontradoError`, `BloqueoNoEncontradoError`,
+`CanalNoSoportadoError` —
 todas heredan de `ErrorSistema` (que a su vez hereda de `Exception`), tal como se
 modeló en el diagrama de clases.

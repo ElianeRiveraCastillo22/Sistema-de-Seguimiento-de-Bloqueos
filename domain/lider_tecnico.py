@@ -50,8 +50,11 @@ class LiderTecnico(Usuario):
                          estado: Optional[EstadoBloqueo] = None) -> List[Bloqueo]:
         return gestor.listar(consultor=consultor, estado=estado)
 
-    def revisar_bloqueos_abiertos(self, gestor) -> List[Bloqueo]:
-        return [b for b in gestor.listar() if b.obtener_estado() != EstadoBloqueo.CERRADO]
+    def revisar_bloqueos_abiertos(self, gestor, estrategia=None) -> List[Bloqueo]:
+        """Devuelve los bloqueos no cerrados; si se da una estrategia (patrón
+        Strategy), los ordena con ella."""
+        abiertos = [b for b in gestor.listar() if b.obtener_estado() != EstadoBloqueo.CERRADO]
+        return estrategia.ordenar(abiertos) if estrategia is not None else abiertos
 
     def marcar_seguimiento_hoy(self, bloqueo: Bloqueo) -> None:
         bloqueo.marcar_seguimiento_hoy()
